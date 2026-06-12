@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String    @unique
+  phone         String?
+  role          String    @default("CUSTOMER")
+  password      String?
+  profileImage  String?
+  verified      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  agentProfile  AgentProfile?
+  properties    Property[]
+  inquiries     Inquiry[]
+  savedProperties SavedProperty[]
+  blogPosts     BlogPost[]
+}
+
+model AgentProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName    String?
+  bio            String?
+  specialization String?
+  location       String?
+  whatsapp       String?
+  phone          String?
+  email          String?
+  profileImage   String?
+}
+
+model Property {
+  id             String         @id @default(uuid())
+  title          String
+  slug           String         @unique
+  description    String
+  propertyType   String
+  purpose        String
+  status         String         @default("AVAILABLE")
+  price          Float
+  currency       String         @default("TZS")
+  location       String
+  city           String
+  district       String?
+  address        String?
+  latitude       Float?
+  longitude      Float?
+  bedrooms       Int?
+  bathrooms      Int?
+  parking        Int?
+  landSize       Float?
+  buildingSize   Float?
+  size           Float?
+  furnished      Boolean        @default(false)
+  yearBuilt      Int?
+  amenities      String
+  featured       Boolean        @default(false)
+  verified       Boolean        @default(true)
+  
+  agentId        String
+  agent          User           @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  images         PropertyImage[]
+  inquiries      Inquiry[]
+  savedBy        SavedProperty[]
+}
+
+model PropertyImage {
+  id          String   @id @default(uuid())
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  imageUrl    String
+  isMain      Boolean  @default(false)
+  sortOrder   Int      @default(0)
+}
+
+model Inquiry {
+  id                     String     @id @default(uuid())
+  propertyId             String
+  property               Property   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  name                   String
+  phone                  String
+  email                  String
+  message                String
+  budget                 Float?
+  preferredContactMethod String?
+  viewingDate            DateTime?
+  leadStatus             String @default("NEW")
+  
+  assignedAgentId        String?
+  assignedAgent          User?      @relation(fields: [assignedAgentId], references: [id])
+
+  createdAt              DateTime   @default(now())
+}
+
+model SavedProperty {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+}
+
+model BlogPost {
+  id        String   @id @default(uuid())
+  title     String
+  slug      String   @unique
+  content   String
+  image     String?
+  category  String?
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
